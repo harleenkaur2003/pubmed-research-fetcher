@@ -139,7 +139,7 @@ Email |
   - CLI structure and debugging help.
   - README writing and organization.
 
-🔗 [ChatGPT Session Reference](https://chatgpt.com/share/67ce4517-b6c4-8012-9db2-42090ff54487)
+🔗 [ChatGPT Session Reference](https://chatgpt.com/share/67f23a20-9714-8004-88b9-5d5e3348c19d)
 
 ---
 
