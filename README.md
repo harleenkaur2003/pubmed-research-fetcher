@@ -119,21 +119,6 @@ Email |
 
 ---
 
-##  Bonus Features Implemented
-
-- ✅ Code is broken into **two modules**: a reusable Python module and a CLI script.
-- ✅ **Module published to Test PyPI** for installability:
-  - Build:
-    ```bash
-    poetry build
-    ```
-  - Publish to Test PyPI:
-    ```bash
-    poetry config repositories.test-pypi https://test.pypi.org/legacy/
-    poetry publish -r test-pypi
-    ```
-
----
 
 ##  Tools and Technologies Used
 
