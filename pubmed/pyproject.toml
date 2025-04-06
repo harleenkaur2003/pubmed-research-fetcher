@@ -2,7 +2,7 @@
 name = "pubmed"
 version = "0.1.0"
 description = "Tool to fetch and analyze PubMed research papers"
-authors = ["Harleen Kaur<harleen9355@gmail.com>"]
+authors = ["Harleen Kaur <harleen9355@gmail.com>"]
 readme = "README.md"
 packages = [{include = "fetch_query"}]
 
