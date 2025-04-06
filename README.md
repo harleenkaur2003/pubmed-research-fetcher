@@ -22,7 +22,7 @@ The tool supports **PubMed's full query syntax**, includes filtering for **non-a
 
 ```
 pubmed/
-├── fetcg_query/
+├── fetch_query/
 │   └── pubmed_fetcher.py        # Core logic and paper-fetching module
 ├── get_query/
 │   └── get_paper_list.py        # CLI interface for running queries
