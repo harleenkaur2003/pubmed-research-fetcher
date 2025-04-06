@@ -2,6 +2,7 @@ import requests
 from typing import List, Dict, Any
 import pandas as pd
 import re
+import json
 import xml.etree.ElementTree as ET
 import time  # For introducing sleep intervals
 
@@ -24,7 +25,17 @@ class PubMedFetcher:
         }
         response = requests.get(base_url, params=params)
         response.raise_for_status()
-        json_data = response.json()
+        
+        try:
+            if "application/json" not in response.headers.get("Content-Type", ""):
+                raise ValueError("Response is not JSON. Content-Type: " + response.headers.get("Content-Type", ""))
+            json_data = response.json()
+
+        except (json.JSONDecodeError, ValueError) as e:
+            print("⚠️ JSON decode failed. Full response:")
+            print(response.text[:1000])  # log more if needed
+            raise    
+
         total_count = int(json_data["esearchresult"]["count"])
         if self.debug:
             print(f"Total matching records: {total_count}")
@@ -44,6 +55,7 @@ class PubMedFetcher:
                 try:
                     response = requests.get(base_url, params=params)
                     response.raise_for_status()
+
                     json_data = response.json()
                     ids = json_data["esearchresult"]["idlist"]
                     all_ids.extend(ids)
@@ -69,6 +81,9 @@ class PubMedFetcher:
         base_url = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi"
         all_papers: List[Dict[str, Any]] = []
         batch_size = 100  # Process in batches to avoid URL-too-long errors
+        
+    
+
         for i in range(0, len(pubmed_ids), batch_size):
             batch_ids = pubmed_ids[i:i + batch_size]
             params = {
@@ -78,14 +93,30 @@ class PubMedFetcher:
             }
             for attempt in range(3):  # Retry up to 3 times
                 try:
-                    response = requests.get(base_url, params=params)
-                    response.raise_for_status()
-                    if self.debug:
-                        print(f"Fetching details for PubMed IDs batch: {batch_ids}")
-                        print("Response:", response.text)
-                    papers = self.parse_paper_details(response.text)
-                    all_papers.extend(papers)
-                    break
+                    try:
+                        response = requests.get(base_url, params=params)
+                        response.raise_for_status()
+
+                        if self.debug:
+                            print(f"Fetching details for PubMed IDs batch: {batch_ids}")
+                            print("Response:", response.text[:500])  # Print only a portion if large
+
+                            # ✅ Check if the response starts with valid XML
+                        if not response.text.strip().startswith('<?xml'):
+                            raise ValueError("Invalid XML response received")
+
+                        papers = self.parse_paper_details(response.text)
+                        all_papers.extend(papers)
+                        break
+                    except requests.exceptions.RequestException as e:
+                        print(f"Network error: {e}")
+                        time.sleep(2)  # retry after delay
+                    except ValueError as ve:
+                        print(f"Value error: {ve}")
+                        break  # Don't retry on invalid response
+                    except Exception as e:
+                        print(f"Unexpected error: {e}")
+                        break
                 except requests.exceptions.RequestException as e:
                     if attempt < 2:
                         print(f"Retrying due to error: {e}")
@@ -130,6 +161,9 @@ class PubMedFetcher:
                 paper["Publication Date"] = f"{year}/{month}/{day}"
             elif year:
                 paper["Publication Date"] = year
+
+            medline_date = article.findtext(".//PubDate/MedlineDate", "")
+            if not paper["Publication Date"] and medline_date: paper["Publication Date"] = medline_date    
 
             authors: List[str] = []
             affiliations: List[str] = []
@@ -219,13 +253,15 @@ class PubMedFetcher:
         df = pd.DataFrame(data,columns=fieldnames)
         
         if mode == 'w':
-            df.to_csv(filename, index=False, mode='w')
+            df.to_csv(filename, index=False, mode='w', encoding='utf-8-sig')
+
         else:
-            df.to_csv(filename, index=False, mode='a', header=False)
+            df.to_csv(filename, index=False, mode='a', header=False, encoding='utf-8-sig')
+
 
         # with open(filename, mode, newline='', encoding='utf-8') as csvfile:
         #     writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         #     if mode == 'w':  # Write header only if file is being created
         #         writer.writeheader()
         #     for row in data:
-        #         writer.writerow(row)
+        #         writer.writerow(row)  

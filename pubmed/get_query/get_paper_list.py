@@ -1,14 +1,14 @@
 import argparse # command line parsing lib
-from pubmed_fetcher.pubmed_fetcher  import PubMedFetcher
+from fetch_query.pubmed_fetcher  import PubMedFetcher
 
 class GetPapersList:
     def __init__(self) -> None:
         self.pubmed_fetcher = PubMedFetcher()
   
     def run(self) -> None:
-        ''''
+        """
         Function to parse the command line arguments using the ArgumentParser
-        '''      
+        """     
 
         parser = argparse.ArgumentParser(description='Fetch papers from PubMed and save to CSV file.')
         parser.add_argument('query', type=str, help='PubMed query Syntax: Example- "keyword AND (keyword2 OR keyword3) AND (keyword4 OR keyword5) AND 2023[dp]"')
